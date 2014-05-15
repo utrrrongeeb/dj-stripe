@@ -62,7 +62,7 @@ class ChangeCardView(LoginRequiredMixin, PaymentsContextMixin, DetailView):
                 self.template_name,
                 {
                     "customer": self.get_object(),
-                    "stripe_error": e.message
+                    "stripe_error": str(e)
                 }
             )
         messages.info(request, "Your card is now updated.")
@@ -240,7 +240,7 @@ class ChangePlanView(LoginRequiredMixin,
                 else:
                     customer.subscribe(form.cleaned_data["plan"])
             except stripe.StripeError as e:
-                self.error = e.message
+                self.error = str(e)
                 return self.form_invalid(form)
             except Exception as e:
                 raise e
