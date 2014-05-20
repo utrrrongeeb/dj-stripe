@@ -333,7 +333,7 @@ class Customer(StripeObject):
 
     @property
     def stripe_customer(self):
-        return stripe.Customer.retrieve(self.stripe_id)
+        return stripe.Customer.retrieve(self.stripe_id, expand=['default_card'])
 
     def purge(self):
         try:
@@ -437,9 +437,9 @@ class Customer(StripeObject):
         cu = self.stripe_customer
         cu.card = token
         cu.save()
-        self.card_fingerprint = cu.active_card.fingerprint
-        self.card_last_4 = cu.active_card.last4
-        self.card_kind = cu.active_card.type
+        self.card_fingerprint = cu.default_card.fingerprint
+        self.card_last_4 = cu.default_card.last4
+        self.card_kind = cu.default_card.type
         self.save()
         card_changed.send(sender=self, stripe_response=cu)
 
@@ -462,10 +462,10 @@ class Customer(StripeObject):
 
     def sync(self, cu=None):
         cu = cu or self.stripe_customer
-        if cu.active_card:
-            self.card_fingerprint = cu.active_card.fingerprint
-            self.card_last_4 = cu.active_card.last4
-            self.card_kind = cu.active_card.type
+        if cu.default_card:
+            self.card_fingerprint = cu.default_card.fingerprint
+            self.card_last_4 = cu.default_card.last4
+            self.card_kind = cu.default_card.type
             self.save()
 
     def sync_invoices(self, cu=None, **kwargs):
