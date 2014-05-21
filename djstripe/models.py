@@ -437,9 +437,10 @@ class Customer(StripeObject):
         cu = self.stripe_customer
         cu.card = token
         cu.save()
-        self.card_fingerprint = cu.default_card.fingerprint
-        self.card_last_4 = cu.default_card.last4
-        self.card_kind = cu.default_card.type
+        default_card = cu.cards.retrieve(cu.default_card)
+        self.card_fingerprint = default_card.fingerprint
+        self.card_last_4 = default_card.last4
+        self.card_kind = default_card.type
         self.save()
         card_changed.send(sender=self, stripe_response=cu)
 
@@ -463,9 +464,11 @@ class Customer(StripeObject):
     def sync(self, cu=None):
         cu = cu or self.stripe_customer
         if cu.default_card:
-            self.card_fingerprint = cu.default_card.fingerprint
-            self.card_last_4 = cu.default_card.last4
-            self.card_kind = cu.default_card.type
+            default_card = cu.cards.retrieve(cu.default_card) if\
+                isinstance(cu.default_card, str) else cu.default_card
+            self.card_fingerprint = default_card.fingerprint
+            self.card_last_4 = default_card.last4
+            self.card_kind = default_card.type
             self.save()
 
     def sync_invoices(self, cu=None, **kwargs):
