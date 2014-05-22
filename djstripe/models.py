@@ -437,9 +437,9 @@ class Customer(StripeObject):
         cu = cu or self.stripe_customer
         # entirely replace the Customer's default_card
         cu.card = token
-        # saves, and requests reference to new card
-        cu.save(expand=['default_card'])
-        card = cu.default_card
+        cu.save()
+	# obtain the updated default card without further API calls
+        card = next(cc for cc in cu.cards.data if cc.id == cu.default_card)
         self.card_fingerprint = card.fingerprint
         self.card_last_4 = card.last4
         self.card_kind = card.type
