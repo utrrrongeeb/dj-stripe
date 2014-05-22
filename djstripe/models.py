@@ -433,16 +433,19 @@ class Customer(StripeObject):
 
         return cus
 
-    def update_card(self, token):
-        cu = self.stripe_customer
+    def update_card(self, token, cu=None):
+        cu = cu or self.stripe_customer
+        # entirely replace the Customer's default_card
         cu.card = token
-        cu.save()
-        default_card = cu.cards.retrieve(cu.default_card)
-        self.card_fingerprint = default_card.fingerprint
-        self.card_last_4 = default_card.last4
-        self.card_kind = default_card.type
+        # saves, and requests reference to new card
+        cu.save(expand=['default_card'])
+        card = cu.default_card
+        self.card_fingerprint = card.fingerprint
+        self.card_last_4 = card.last4
+        self.card_kind = card.type
         self.save()
         card_changed.send(sender=self, stripe_response=cu)
+        return card
 
     def retry_unpaid_invoices(self):
         self.sync_invoices()
