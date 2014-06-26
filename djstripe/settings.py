@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import sys
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core import exceptions
 from django.utils import importlib
 
 from . import safe_settings
@@ -15,8 +15,9 @@ def get_user_model():
     try:
         from django.contrib.auth import get_user_model
         User = get_user_model()
-    except (ImportError, RuntimeError):
-        from django.contrib.auth.models import User
+    except (ImportError, RuntimeError, exceptions.AppRegistryNotReady):
+        User = settings.AUTH_USER_MODEL
+        # from django.contrib.auth.models import User
     return User
 
 User = get_user_model()
@@ -34,11 +35,11 @@ def load_path_attr(path):
     try:
         mod = importlib.import_module(module)
     except ImportError as e:
-        raise ImproperlyConfigured("Error importing %s: '%s'" % (module, e))
+        raise exceptions.ImproperlyConfigured("Error importing %s: '%s'" % (module, e))
     try:
         attr = getattr(mod, attr)
     except AttributeError:
-        raise ImproperlyConfigured("Module '%s' does not define a '%s'" % (
+        raise exceptions.ImproperlyConfigured("Module '%s' does not define a '%s'" % (
             module, attr)
         )
     return attr
